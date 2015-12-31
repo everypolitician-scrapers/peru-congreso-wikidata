@@ -5,16 +5,17 @@ require 'scraperwiki'
 require 'wikidata/fetcher'
 require 'pry'
 
-@pages = [
-  'Categoría:Congresistas de Perú 2011-2016',
-]
+en_names = EveryPolitician::Wikidata.wikipedia_xpath( 
+  url: 'https://en.wikipedia.org/wiki/Template:Peruvian_Congress_2011-2016',
+  xpath: '//table//td[contains(@class,"navbox-list")]//li//a[not(@class="new")]/@title',
+) 
 
-ids = @pages.map { |c| WikiData::Category.new(c, 'es').wikidata_ids }.flatten.uniq
-ids.each_with_index do |id, i|
-  puts i if (i % 20).zero?
-  data = WikiData::Fetcher.new(id: id).data('es') or next
-  ScraperWiki.save_sqlite([:id], data) rescue binding.pry
-end
+es_names = cat = WikiData::Category.new( 'Categoría:Congresistas de Perú 2011-2016', 'es').member_titles
+
+EveryPolitician::Wikidata.scrape_wikidata(names: { 
+  es: es_names,
+  en: en_names,
+}, output: false)
 
 warn EveryPolitician::Wikidata.notify_rebuilder
 
